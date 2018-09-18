@@ -18,13 +18,13 @@ from matplotlib.figure import figaspect
 import matplotlib.colors as colors
 
 script_dir = os.path.dirname(__file__)
-rel_pathCurr = "Messdaten/20180315_Test_curr.dat"          # Hier das auszulesende curr 
+rel_pathCurr = "99_Messdaten/20180315_Test_curr.dat"          # Hier das auszulesende curr 
                                                 # file eingeben 
 SaveCurr = rel_pathCurr[10:-4]
 CurrDat = os.path.join(script_dir, rel_pathCurr)
 
 
-rel_pathTemp = "Messdaten/20180104_Temp_mitAkku.dat"          # Hier das auszulesende temp 
+rel_pathTemp = "99_Messdaten/20180104_Temp_mitAkku.dat"          # Hier das auszulesende temp 
                                                 # file eingeben 
 
 SaveTemp = rel_pathTemp[10:-4]
