@@ -2,7 +2,7 @@
 """
 Created on Sat Feb 24 09:15:20 2018
 
-@author: Rene Planteu
+@author: Rene Planteuu
 """
 
 import Tkinter as tk
