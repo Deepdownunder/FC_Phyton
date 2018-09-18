@@ -65,7 +65,7 @@ class FC_GUI_Fun:
     def read_Curr(self):
         """Liest die Currentrohdaten ein und speichert sie als Ergebnisfile ab"""
         f = open(self.currurl)
-        self.SaveCurr = self.currurl[38:-4]                       
+        self.SaveCurr = self.currurl[57:-4]                       
         self.AusCurr = (self.path+'/'+'Ergebnis_'+self.SaveCurr+'.txt')                 # Dateiname curr                               
         volt = []
         #current = []
@@ -151,7 +151,7 @@ class FC_GUI_Fun:
     def read_Temp(self):
         """Liest die Temperaturrohdaten ein und speichert sie als Ergebnisfile ab"""
         g = open(self.tempurl)                      
-        self.SaveTemp=self.tempurl[38:-4]    
+        self.SaveTemp=self.tempurl[57:-4]    
         self.AusTemp = (self.path+'/'+'Ergebnis_'+self.SaveTemp+'.txt')
         linesB = []
         rows = 0
