@@ -324,7 +324,7 @@ class FC_GUI_Fun:
 root = Tk()
 root.title("FC Python")
 root.geometry("1000x850")
-root.wm_iconbitmap(r'C:\Projektlabor_2\FC_Python\GUI\FCPy_win7.ico')
+root.wm_iconbitmap(r'C:\Software\10_FC_Python\FC_Phyton\03_GUI\FCPy_win7.ico')
 labelsize1=40
 labelsize2=5
 labelsize3=40
