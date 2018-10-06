@@ -2,7 +2,7 @@
 """
 Created on Sat Feb 24 09:15:20 2018
 
-@author: Rene Planteuu
+@author: Rene Planteu
 """
 
 import Tkinter as tk
@@ -37,8 +37,10 @@ class FC_GUI_Fun:
     def importURL_Curr(self):
         """Wählt die Current Rohdatei aus und stellt sie dar"""
         self.currurl = tkFileDialog.askopenfilename(initialdir = "r'C:/Projektlabor_2/FC_Python",title = "Select file",filetypes = (("current files","*.dat"),("all files","*.*")))
+        self.currurli_w_ext= os.path.basename(self.currurl)
+        self.currfile, self.currext =os.path.splitext(self.currurli_w_ext)
         self.displaycurrent.delete(1.0, END)
-        self.displaycurrent.insert(tk.END, self.currurl[40:])
+        self.displaycurrent.insert(tk.END, self.currfile)
         self.currread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current geladen"     
         self.displaystate.insert(tk.END, self.currread+'\n')
         
@@ -46,8 +48,10 @@ class FC_GUI_Fun:
     def importURL_Temp(self):
         """Wählt die Temperatur Rohdatei aus und stellt sie dar"""
         self.tempurl = tkFileDialog.askopenfilename(initialdir = "r'C:/Projektlabor_2/FC_Python",title = "Select file",filetypes = (("current files","*.dat"),("all files","*.*")))
+        self.tempurli_w_ext= os.path.basename(self.tempurl)
+        self.tempfile, self.tempext =os.path.splitext(self.tempurli_w_ext)
         self.displaytemp.delete(1.0, END)
-        self.displaytemp.insert(tk.END, self.tempurl[40:])        
+        self.displaytemp.insert(tk.END, self.tempfile)        
         self.tempread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperatur geladen"   
         self.displaystate.insert(tk.END, self.tempread+'\n')    
         
@@ -55,9 +59,10 @@ class FC_GUI_Fun:
     def savepath(self):
         """Wählt den Speicherpath aus und stellt ihn dar"""
         self.path= tkFileDialog.askdirectory()    
-        
+        self.path_w_ext= os.path.basename(self.path)
+        self.pathshort, self.pathext =os.path.splitext(self.path_w_ext)
         self.displaypath.delete(1.0, END)
-        self.displaypath.insert(tk.END, self.path[20:])
+        self.displaypath.insert(tk.END, self.pathshort)
         self.pathread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Path ausgewaehlt"   
         self.displaystate.insert(tk.END, self.pathread+'\n')     
         
@@ -65,8 +70,8 @@ class FC_GUI_Fun:
     def read_Curr(self):
         """Liest die Currentrohdaten ein und speichert sie als Ergebnisfile ab"""
         f = open(self.currurl)
-        self.SaveCurr = self.currurl[57:-4]                       
-        self.AusCurr = (self.path+'/'+'Ergebnis_'+self.SaveCurr+'.txt')                 # Dateiname curr                               
+        self.SaveCurr = self.currfile                     
+        self.AusCurr = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveCurr+'.txt')                 # Dateiname curr                               
         volt = []
         #current = []
         lines = []
@@ -151,8 +156,8 @@ class FC_GUI_Fun:
     def read_Temp(self):
         """Liest die Temperaturrohdaten ein und speichert sie als Ergebnisfile ab"""
         g = open(self.tempurl)                      
-        self.SaveTemp=self.tempurl[57:-4]    
-        self.AusTemp = (self.path+'/'+'Ergebnis_'+self.SaveTemp+'.txt')
+        self.SaveTemp=self.tempfile    
+        self.AusTemp = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveTemp+'.txt')
         linesB = []
         rows = 0
         for line in g:
