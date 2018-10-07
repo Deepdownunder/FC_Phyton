@@ -80,6 +80,7 @@ class FC_GUI_Fun:
             lines.append(line)
             if 'current' in line:
                 rows += 1
+            
         f.close()
     
         timeA = float(lines[1]) 
@@ -119,7 +120,7 @@ class FC_GUI_Fun:
             #voltage
             start = i + int(entryVoltStart.get())-1#4                               #1. Zeile mit Spannungswerten
             volt = lines[start]
-            volt = float(volt)
+            volt = float(volt[:8])
             volt = abs(volt)
             volt = format(volt,'.4f')                   # 4.f = eine Nachkomma
             self.data_str['voltage'].append(str(volt)) 
