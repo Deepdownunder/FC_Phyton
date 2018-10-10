@@ -92,7 +92,7 @@ class FC_GUI_Fun:
         
     def read_Curr(self):
         """Liest die Currentrohdaten ein und speichert sie als Ergebnisfile ab"""
-        
+        print "im Auslesen"
         if self.currfile =="":
             self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Currentfile ausgewählt"
             self.displaystate.insert(tk.END, self.nothingcurr+'\n')
@@ -102,20 +102,26 @@ class FC_GUI_Fun:
             return
         else:
             self.f = open(self.currurl)
-            self.SaveCurr = self.currfile                     
-            self.AusCurr = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveCurr+'.txt')
-            self.lines=self.f.readlines()
-            if self.lines[3]=='current':
-                print self.lines[3]
-                self.read_Curr_new(self)
+            self.lines4=self.f.readlines()
+            if "voltage" in self.lines4[3]:
+                print "reingegangen"
+                self.f.close()
+                self.read_Curr_new()
                 
             else:
-                self.read_Curr_old(self)
+                print "nicht reingegangen"
+                self.f.close()
+                self.read_Curr_old()
+                
+                return
     
     def read_Curr_new(self):
+        
+            self.f = open(self.currurl)
+            self.SaveCurr = self.currfile                     
+            self.AusCurr = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveCurr+'.txt')
             
-            
-                            # Dateiname curr                               
+            # Dateiname curr                               
             volt = []
             #current = []
             lines = []
@@ -193,10 +199,99 @@ class FC_GUI_Fun:
                 stringline = self.data_str['time'][nr] + ';' + self.data_str['voltage'][nr] +';'+ self.data_str['current'][nr] + self.data_str['sumcurr'][nr]+';' +'\n'
                 f.write(stringline)
             self.data['sumcurr'] = np.array(self.data['sumcurr'])
+            self.currdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current eingelesen_Version_new"   
+            self.displaystate.insert(tk.END, self.currdone+'\n')       
+            
+            f.close()
+            
+    def read_Curr_old(self):
+        
+            self.f = open(self.currurl)
+            self.SaveCurr = self.currfile                     
+            self.AusCurr = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveCurr+'.txt')
+            
+            # Dateiname curr                               
+            volt = []
+            #current = []
+            lines = self.f.readlines()
+            rows= int(np.shape(lines)[0]/13)
+                
+                
+                
+            self.f.close()
+        
+            timeA = float(lines[1]) 
+            skip = int(entryCurrJump2.get()) #17
+            
+            self.data_str = {}
+            self.data_str['current'] = []
+            self.data_str['voltage'] = []
+            self.data_str['time'] = []
+            self.data_str['sumcurr']=[]        
+            f = open(self.AusCurr,'w')
+            #init step
+            start = int(entryCurrStart2.get())-1    
+            end = int(entryCurrEnd2.get())
+            L = lines[start:end]
+            cols = len(L[0].replace('\n','').replace('\t',';').replace(' ','').split(';'))
+            cols = cols*len(L)    
+            
+            currents = np.zeros((rows,cols))
+            
+            nr = -1
+            self.data['current']=[]
+            self.data['voltage']=[]
+            self.data['time']=[]
+            self.data['sumcurr']=[]
+            for i in range(0,len(lines),skip):
+                nr += 1
+                
+                #time sec since start
+                start = i + 1
+                time = lines[start]
+                time = float(time)
+                time = format((time -timeA),'.1f')          # 1.f = eine Nachkomma
+                self.data_str['time'].append(str(time))
+                self.data['time'].append(time)            
+                
+                #voltage
+                start = i + int(entryVoltStart2.get())-1#4   #1. Zeile mit Spannungswerten
+                volt = lines[start].split('\t')
+                volt = volt[0]
+                volt = float(volt[:8])
+                volt = abs(volt)
+                volt = format(volt,'.4f')                   # 4.f = 4 Nachkommastellen
+                self.data_str['voltage'].append(str(volt)) 
+                self.data['voltage'].append(volt)            
+                
+                #current
+                start = i + int(entryCurrStart2.get())-1                       # 1. Zeile mit Stromwerten
+                end = i + int(entryCurrEnd2.get())                            # Letze Zeile mit Sromwerten
+                L = lines[start:end]
+                rows = len(L)
+                curr = []
+                self.curr_str = ''
+                for row in range(0,rows):
+                    dummy = L[row].replace('\n','').replace('\t',';').replace(' ','')
+                    curr += dummy.split(';')
+                    self.curr_str = self.curr_str + dummy + ';'
+                
+                currents[nr,:] = curr        
+                self.data_str['current'].append(self.curr_str[:-1])
+                self.data['current'].append(currents[nr,:])
+                
+                #Sum of Current in line
+                self.data_str['sumcurr'].append(str(np.sum(currents[nr,:])))
+                self.data['sumcurr'].append( np.sum(currents[nr,:]))
+                
+                stringline = self.data_str['time'][nr] + ';' + self.data_str['voltage'][nr] +';'+ self.data_str['current'][nr] + self.data_str['sumcurr'][nr]+';' +'\n'
+                f.write(stringline)
+            self.data['sumcurr'] = np.array(self.data['sumcurr'])
             self.currdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current eingelesen"   
             self.displaystate.insert(tk.END, self.currdone+'\n')       
             
             f.close()
+    
     
     def read_Temp(self):
         """Liest die Temperaturrohdaten ein und speichert sie als Ergebnisfile ab"""
@@ -206,8 +301,22 @@ class FC_GUI_Fun:
         if self.pathshort =="":
             self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Path ausgewählt"
             self.displaystate.insert(tk.END, self.nothingpath+'\n')
-            return
         else:
+            self.g = open(self.tempurl) 
+            self.lines5=self.g.readlines()
+            if "temperature" in self.lines5[3]:
+                print "reingegangen"
+                self.g.close()
+                self.read_Temp_new()
+                
+            else:
+                print "nicht reingegangen"
+                self.g.close()
+                self.read_Temp_old()
+                
+                return
+                
+    def read_Temp_new(self):
             
             
             g = open(self.tempurl)                      
@@ -277,6 +386,76 @@ class FC_GUI_Fun:
             
             
             g.close()
+    
+    def read_Temp_old(self):
+            
+            
+            self.g = open(self.tempurl)                      
+            self.SaveTemp=self.tempfile    
+            self.AusTemp = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveTemp+'.txt')
+            
+            linesB = self.g.readlines()
+            rows= int(np.shape(linesB)[0]/int(entryTempJump2.get()))          
+            
+            
+            self.g.close()
+           
+            timeC = float(linesB[1]) 
+            skipB = int(entryTempJump2.get()) #10
+            
+            self.data_str['temp'] = []
+            self.data_str['timetemp'] = []
+           
+            self.g = open(self.AusTemp,'w')
+            
+            #init step
+            start = int(entryTempStart2.get())-1 
+            end = int(entryTempEnd2.get()) 
+            L = linesB[start:end]
+            cols = len(L[0].split('\t'))
+            cols = cols*len(L) 
+            
+            temperature=np.zeros((rows,cols))
+            
+            nr=-1
+            self.data['temp']=[]
+            self.data['timetemp']=[]
+            for i in  range(0,len(linesB),skipB):
+                nr += 1
+            
+                #time in sec since start
+                start = i + 1
+                timeB = linesB[start]
+                timeB = float(timeB)
+                timeB = format((timeB -timeC),'.1f') 
+                self.data_str['timetemp'].append(str(timeB))
+                self.data['timetemp'].append(timeB)
+                
+                #temperature
+                start = i + int(entryTempStart2.get())-1                       # 1. Zeile mit Stromwerten
+                end = i + int(entryTempEnd2.get())                            # Letze Zeile mit Sromwerten
+                L = linesB[start:end]
+                rows = len(L)
+                temp = []
+                self.temp_str = ''
+                for row in range(0,rows):
+                    dummy = L[row].replace('\n','').replace('\t',';').replace(' ','')
+                    temp += dummy.split(';')
+                    self.temp_str=self.temp_str + dummy +';'
+                    
+                temperature[nr,:] = temp
+                self.data_str['temp'].append(self.temp_str[:-1])
+                self.data['temp'].append(temperature[nr,:])
+                
+                stringline = self.data_str['timetemp'][nr]+';' +self.data_str['temp'][nr]+';'+'\n'
+                self.g.write(stringline)
+            
+            
+            self.tempdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature eingelesen"
+            self.displaystate.insert(tk.END, self.tempdone+'\n')    
+            
+            
+            self.g.close()
     
     
     
@@ -450,11 +629,11 @@ FC_GUI_Fun = FC_GUI_Fun()
 nb = ttk.Notebook(root)
 nb.grid(row=1, column=0, columnspan=300, rowspan=300,sticky=stick2)
 
-#page1 = ttk.Frame(nb)
-#nb.add(page1, text='Main')
-
 page2 = ttk.Frame(nb)
 nb.add(page2, text='Einstellungen')
+
+page1 = ttk.Frame(nb)
+nb.add(page1, text='Einstellungen_old')
 
 page3 = ttk.Frame(nb)
 nb.add(page3, text='Plot')
@@ -481,9 +660,9 @@ labelAngleCurr=tk.Label(page2, text="Angle of plot view: (60)", width=labelsize1
 labelAngleCurr.grid(column=0, row=11)
 labelTrans=tk.Label(page2, text="Transparency of Plot 1...0.5...0", width=labelsize1,anchor=textalign )
 labelTrans.grid(column=0, row=12)
-labelTempStart=tk.Label(page2, text="1st line of temp data in *.dat: (4)", width=labelsize1,anchor=textalign )
+labelTempStart=tk.Label(page2, text="1st line of temp data in *.dat: (5)", width=labelsize1,anchor=textalign )
 labelTempStart.grid(column=2, row=6)
-labelTempEnd=tk.Label(page2, text="Last line of temp data in *.dat: (5)", width=labelsize1,anchor=textalign )
+labelTempEnd=tk.Label(page2, text="Last line of temp data in *.dat: (9)", width=labelsize1,anchor=textalign )
 labelTempEnd.grid(column=2, row=7)
 labelJumpCurr=tk.Label(page2, text="Number of lines between current data: (18)", width=labelsize1,anchor=textalign )
 labelJumpCurr.grid(column=2, row=8)
@@ -558,24 +737,46 @@ var10 = tk.StringVar(root, value="60")
 var11 = tk.StringVar(root, value="25")
 var12 = tk.StringVar(root, value="60")
 var13 = tk.StringVar(root, value="1")
+var14 = tk.StringVar(root, value="4")
+var15 = tk.StringVar(root, value="13")
+var16 = tk.StringVar(root, value="3")
+var17 = tk.StringVar(root, value="4")
+var18 = tk.StringVar(root, value="8")
+var19 = tk.StringVar(root, value="13")
+var20 = tk.StringVar(root, value="8")
+
 
 """Position der Entryies"""
 entryCurrStart=tk.Entry(page2,width=labelsize2, textvariable=var1)
-entryCurrStart.grid(sticky=stick, column=1, row=6)
+entryCurrStart.grid(sticky=stick2, column=0, row=6)
+entryCurrStart2=tk.Entry(page2,width=labelsize2, textvariable=var14)
+entryCurrStart2.grid(sticky=stick, column=1, row=6)
 entryCurrEnd=tk.Entry(page2,width=labelsize2, textvariable=var2)
-entryCurrEnd.grid(sticky=stick,column=1, row=7)
+entryCurrEnd.grid(sticky=stick2,column=0, row=7)
+entryCurrEnd2=tk.Entry(page2,width=labelsize2, textvariable=var15)
+entryCurrEnd2.grid(sticky=stick,column=1, row=7)
 entryVoltStart=tk.Entry(page2,width=labelsize2, textvariable=var3)
-entryVoltStart.grid(sticky=stick,column=1, row=8)
+entryVoltStart.grid(sticky=stick2,column=0, row=8)
+entryVoltStart2=tk.Entry(page2,width=labelsize2, textvariable=var16)
+entryVoltStart2.grid(sticky=stick,column=1, row=8)
 entryrowplot=tk.Entry(page2,width=labelsize2,textvariable=var8)
 entryrowplot.grid(sticky=stick,column=1, row=9)
 entryTempStart=tk.Entry(page2,width=labelsize2, textvariable=var4)
 entryTempStart.grid(sticky=stick2, column=1, row=6)
+entryTempStart2=tk.Entry(page2,width=labelsize2, textvariable=var17)
+entryTempStart2.grid(sticky=stick2, column=2, row=6)
 entryTempEnd=tk.Entry(page2,width=labelsize2, textvariable=var5)
 entryTempEnd.grid(sticky=stick2,column=1, row=7)
+entryTempEnd2=tk.Entry(page2,width=labelsize2, textvariable=var18)
+entryTempEnd2.grid(sticky=stick2,column=2, row=7)
 entryCurrJump=tk.Entry(page2,width=labelsize2, textvariable=var6)
 entryCurrJump.grid(sticky=stick2,column=1, row=8)
+entryCurrJump2=tk.Entry(page2,width=labelsize2, textvariable=var19)
+entryCurrJump2.grid(sticky=stick2,column=2, row=8)
 entryTempJump=tk.Entry(page2,width=labelsize2, textvariable=var7)
 entryTempJump.grid(sticky=stick2,column=1, row=9)
+entryTempJump2=tk.Entry(page2,width=labelsize2, textvariable=var20)
+entryTempJump2.grid(sticky=stick2,column=2, row=9)
 entryCurrEval=tk.Entry(page2,width=labelsize2, textvariable=var9)
 entryCurrEval.grid(sticky=stick,column=1, row=10)
 entryCurrAngle=tk.Entry(page2,width=labelsize2, textvariable=var10)
