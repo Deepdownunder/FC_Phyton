@@ -15,7 +15,8 @@ import time as ts
 import os
 import numpy as np
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d.axes3d import Axes3D, get_test_data 
+from mpl_toolkits.mplot3d.axes3d import Axes3D as dreid
+from mpl_toolkits.mplot3d.axes3d import get_test_data as datdreid
 import scipy as sp
 from matplotlib import cm
 #from matplotlib.figure import figaspect
@@ -100,19 +101,31 @@ class FC_GUI_Fun:
             self.displaystate.insert(tk.END, self.nothingpath+'\n')
             return
         else:
-            f = open(self.currurl)
+            self.f = open(self.currurl)
             self.SaveCurr = self.currfile                     
-            self.AusCurr = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveCurr+'.txt')                 # Dateiname curr                               
+            self.AusCurr = (self.path+'/'+ts.strftime("%Y%m%d_%H%M%S_")+'Ergebnis_'+self.SaveCurr+'.txt')
+            self.lines=self.f.readlines()
+            if self.lines[3]=='current':
+                print self.lines[3]
+                self.read_Curr_new(self)
+                
+            else:
+                self.read_Curr_old(self)
+    
+    def read_Curr_new(self):
+            
+            
+                            # Dateiname curr                               
             volt = []
             #current = []
             lines = []
             rows = 0
-            for line in f:
+            for line in self.f:
                 lines.append(line)
                 if 'current' in line:
                     rows += 1
                 
-            f.close()
+            self.f.close()
         
             timeA = float(lines[1]) 
             skip = int(entryCurrJump.get()) #17
