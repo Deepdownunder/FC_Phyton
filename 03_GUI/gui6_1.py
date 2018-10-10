@@ -15,13 +15,13 @@ import time as ts
 import os
 import numpy as np
 from matplotlib import pyplot as plt
-#from mpl_toolkits.mplot3d.axes3d import Axes3D, get_test_data
+from mpl_toolkits.mplot3d.axes3d import Axes3D, get_test_data 
 import scipy as sp
 from matplotlib import cm
 #from matplotlib.figure import figaspect
 #import matplotlib.colors as colors
 import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 
 class FC_GUI_Fun:
@@ -275,12 +275,11 @@ class FC_GUI_Fun:
             self.displaystate.insert(tk.END, self.nothingdone+'\n')
             return
         else:
-        
             fig = plt.figure(figsize=plt.figaspect(0.5))
             canvas = FigureCanvasTkAgg(fig, master=page3)
             canvas.get_tk_widget().pack(side='top', fill='both')
             canvas._tkcanvas.pack(side='top', fill='both', expand=2)
-            toolbar = NavigationToolbar2TkAgg(canvas, page3)
+            toolbar = NavigationToolbar2Tk(canvas, page3)
             canvas.get_tk_widget().grid(row=1,column=1)
             toolbar.grid(row=50,column=1) 
               
@@ -368,7 +367,7 @@ class FC_GUI_Fun:
             canvas = FigureCanvasTkAgg(fig2, master=page3)
             canvas.get_tk_widget().pack(side='top', fill='both')
             canvas._tkcanvas.pack(side='top', fill='both', expand=2)
-            toolbar = NavigationToolbar2TkAgg(canvas, page3)
+            toolbar = NavigationToolbar2Tk(canvas, page3)
             canvas.get_tk_widget().grid(row=1,column=2)
             toolbar.grid(row=50,column=2) 
             ax2 = fig2.add_subplot(1, 2, 1, projection='3d')
