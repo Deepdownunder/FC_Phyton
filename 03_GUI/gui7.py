@@ -52,11 +52,11 @@ class FC_GUI_Fun:
         self.currfile, self.currext =os.path.splitext(self.currurli_w_ext)
         self.displaycurrent.delete(1.0, tk.END)
         if self.currfile=="":
-            self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Currentfile ausgewählt"
+            self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Currentfile was selected"
             self.displaystate.insert(tk.END, self.nothingcurr+'\n')
         else:    
             self.displaycurrent.insert(tk.END, self.currfile)
-            self.currread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current geladen"     
+            self.currread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Currentfile selected"     
             self.displaystate.insert(tk.END, self.currread+'\n')
         
         
@@ -67,11 +67,11 @@ class FC_GUI_Fun:
         self.tempfile, self.tempext =os.path.splitext(self.tempurli_w_ext)
         self.displaytemp.delete(1.0, tk.END)
         if self.tempfile == "":
-            self.nothingtemp=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Temperaturfile ausgewählt" 
+            self.nothingtemp=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Temperaturefile was selected" 
             self.displaystate.insert(tk.END, self.nothingtemp+'\n')
         else:
             self.displaytemp.insert(tk.END, self.tempfile)        
-            self.tempread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperatur geladen"   
+            self.tempread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperaturefile selected "   
             self.displaystate.insert(tk.END, self.tempread+'\n')    
         
             
@@ -82,11 +82,11 @@ class FC_GUI_Fun:
         self.pathshort, self.pathext =os.path.splitext(self.path_w_ext)
         self.displaypath.delete(1.0, tk.END)
         if self.pathshort=="":
-            self.nothingpath= ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Path ausgewaehlt"
+            self.nothingpath= ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Path was selected"
             self.displaystate.insert(tk.END, self.nothingpath+'\n') 
         else:
             self.displaypath.insert(tk.END, self.pathshort)
-            self.pathread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Path ausgewaehlt"   
+            self.pathread = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Path selected"   
             self.displaystate.insert(tk.END, self.pathread+'\n')     
         
         
@@ -94,22 +94,20 @@ class FC_GUI_Fun:
         """Liest die Currentrohdaten ein und speichert sie als Ergebnisfile ab"""
         print "im Auslesen"
         if self.currfile =="":
-            self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Currentfile ausgewählt"
+            self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Currentfile was selected"
             self.displaystate.insert(tk.END, self.nothingcurr+'\n')
         if self.pathshort =="":
-            self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Path ausgewählt"
+            self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Path was selected"
             self.displaystate.insert(tk.END, self.nothingpath+'\n')
             return
         else:
             self.f = open(self.currurl)
             self.lines4=self.f.readlines()
             if "voltage" in self.lines4[3]:
-                print "reingegangen"
                 self.f.close()
                 self.read_Curr_new()
                 
             else:
-                print "nicht reingegangen"
                 self.f.close()
                 self.read_Curr_old()
                 
@@ -140,7 +138,8 @@ class FC_GUI_Fun:
             self.data_str['current'] = []
             self.data_str['voltage'] = []
             self.data_str['time'] = []
-            self.data_str['sumcurr']=[]        
+            self.data_str['sumcurr']=[]
+            self.data_str['power']=[]
             f = open(self.AusCurr,'w')
             #init step
             start = int(entryCurrStart.get())-1    
@@ -156,6 +155,7 @@ class FC_GUI_Fun:
             self.data['voltage']=[]
             self.data['time']=[]
             self.data['sumcurr']=[]
+            self.data['power']=[]
             for i in range(0,len(lines),skip):
                 nr += 1
                 
@@ -187,19 +187,29 @@ class FC_GUI_Fun:
                     dummy = L[row].replace('\n','').replace('\t',';').replace(' ','')
                     curr += dummy.split(';')
                     self.curr_str = self.curr_str + dummy + ';'
+
                 
                 currents[nr,:] = curr        
                 self.data_str['current'].append(self.curr_str[:-1])
                 self.data['current'].append(currents[nr,:])
                 
                 #Sum of Current in line
-                self.data_str['sumcurr'].append(str(np.sum(currents[nr,:])))
+                self.data_str['sumcurr'].append(str(round(np.sum(currents[nr,:]),4)))
                 self.data['sumcurr'].append( np.sum(currents[nr,:]))
                 
-                stringline = self.data_str['time'][nr] + ';' + self.data_str['voltage'][nr] +';'+ self.data_str['current'][nr] + self.data_str['sumcurr'][nr]+';' +'\n'
+                
+                #Calculating Power
+                self.data['power'].append(currents[nr,:]*float(volt))
+                power_str=np.array2string(currents[nr,:]*float(volt),separator=';')
+                self.data_str['power'].append(power_str[1:-1])
+                
+                #Calculating Restiance
+                #self.data['ohm']=float(volt)/(currents[nr,:])
+                
+                stringline = self.data_str['time'][nr] + ';' + self.data_str['voltage'][nr] +';'+ self.data_str['current'][nr] +';'+ self.data_str['sumcurr'][nr]+';'+self.data_str['power'][nr]+'\n'
                 f.write(stringline)
             self.data['sumcurr'] = np.array(self.data['sumcurr'])
-            self.currdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current eingelesen_Version_new"   
+            self.currdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current was loaded with: new_method"   
             self.displaystate.insert(tk.END, self.currdone+'\n')       
             
             f.close()
@@ -281,13 +291,13 @@ class FC_GUI_Fun:
                 self.data['current'].append(currents[nr,:])
                 
                 #Sum of Current in line
-                self.data_str['sumcurr'].append(str(np.sum(currents[nr,:])))
+                self.data_str['sumcurr'].append(str(round(np.sum(currents[nr,:]),4)))
                 self.data['sumcurr'].append( np.sum(currents[nr,:]))
                 
-                stringline = self.data_str['time'][nr] + ';' + self.data_str['voltage'][nr] +';'+ self.data_str['current'][nr] + self.data_str['sumcurr'][nr]+';' +'\n'
+                stringline = self.data_str['time'][nr] + ';' + self.data_str['voltage'][nr] +';'+ self.data_str['current'][nr] +';'+ self.data_str['sumcurr'][nr]+';' +'\n'
                 f.write(stringline)
             self.data['sumcurr'] = np.array(self.data['sumcurr'])
-            self.currdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current eingelesen"   
+            self.currdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current loaded with: old_method"   
             self.displaystate.insert(tk.END, self.currdone+'\n')       
             
             f.close()
@@ -296,21 +306,19 @@ class FC_GUI_Fun:
     def read_Temp(self):
         """Liest die Temperaturrohdaten ein und speichert sie als Ergebnisfile ab"""
         if self.tempfile =="":
-            self.nothingtemp=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Temperaturfile ausgewählt"
+            self.nothingtemp=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Temperaturefile was selected"
             self.displaystate.insert(tk.END, self.nothingtemp+'\n')
         if self.pathshort =="":
-            self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Path ausgewählt"
+            self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Path was selected"
             self.displaystate.insert(tk.END, self.nothingpath+'\n')
         else:
             self.g = open(self.tempurl) 
             self.lines5=self.g.readlines()
             if "temperature" in self.lines5[3]:
-                print "reingegangen"
                 self.g.close()
                 self.read_Temp_new()
                 
             else:
-                print "nicht reingegangen"
                 self.g.close()
                 self.read_Temp_old()
                 
@@ -335,7 +343,8 @@ class FC_GUI_Fun:
             
             self.data_str['temp'] = []
             self.data_str['timetemp'] = []
-           
+            self.data_str['tempmw']=[]
+            
             g = open(self.AusTemp,'w')
             
             #init step
@@ -350,6 +359,7 @@ class FC_GUI_Fun:
             nr=-1
             self.data['temp']=[]
             self.data['timetemp']=[]
+            self.data['tempmw']=[]
             for i in  range(0,len(linesB),skipB):
                 nr += 1
             
@@ -367,6 +377,7 @@ class FC_GUI_Fun:
                 L = linesB[start:end]
                 rows = len(L)
                 temp = []
+                
                 self.temp_str = ''
                 for row in range(0,rows):
                     dummy = L[row].replace('\n','').replace('\t',';').replace(' ','')
@@ -377,11 +388,15 @@ class FC_GUI_Fun:
                 self.data_str['temp'].append(self.temp_str[:-1])
                 self.data['temp'].append(temperature[nr,:])
                 
-                stringline = self.data_str['timetemp'][nr]+';' +self.data_str['temp'][nr]+';'+'\n'
+                #Sum of Current in line
+                self.data_str['tempmw'].append(str(round(np.sum(temperature[nr,:])/25,4)))
+                self.data['tempmw'].append((np.sum(temperature[nr,:]))/25)
+                
+                stringline = self.data_str['timetemp'][nr]+';' +self.data_str['temp'][nr]+';'+self.data_str['tempmw'][nr]+'\n'
                 g.write(stringline)
             
-            
-            self.tempdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature eingelesen"
+            self.data['tempmw'] = np.array(self.data['tempmw'])
+            self.tempdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature loaded with: new_method"
             self.displaystate.insert(tk.END, self.tempdone+'\n')    
             
             
@@ -405,7 +420,8 @@ class FC_GUI_Fun:
             
             self.data_str['temp'] = []
             self.data_str['timetemp'] = []
-           
+            self.data_str['tempmw']=[]
+            
             self.g = open(self.AusTemp,'w')
             
             #init step
@@ -420,6 +436,8 @@ class FC_GUI_Fun:
             nr=-1
             self.data['temp']=[]
             self.data['timetemp']=[]
+            self.data['tempmw']=[]
+            
             for i in  range(0,len(linesB),skipB):
                 nr += 1
             
@@ -447,15 +465,72 @@ class FC_GUI_Fun:
                 self.data_str['temp'].append(self.temp_str[:-1])
                 self.data['temp'].append(temperature[nr,:])
                 
-                stringline = self.data_str['timetemp'][nr]+';' +self.data_str['temp'][nr]+';'+'\n'
+                
+                
+                #Mean of Temperature
+                self.data_str['tempmw'].append(str(round(np.sum(temperature[nr,:])/25,4)))
+                self.data['tempmw'].append((np.sum(temperature[nr,:]))/25)
+                
+                stringline = self.data_str['timetemp'][nr]+';' +self.data_str['temp'][nr]+';'+self.data_str['tempmw'][nr]+'\n'
                 self.g.write(stringline)
             
-            
-            self.tempdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature eingelesen"
+            self.data['tempmw'] = np.array(self.data['tempmw'])
+            self.tempdone = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature loaded with: old_method"
             self.displaystate.insert(tk.END, self.tempdone+'\n')    
             
             
             self.g.close()
+            
+            
+    def plot_curr_sum(self):
+            """Gibt Zeilen anhand des eingebenen Stroms an"""
+             ######## plot a 3D Current ########
+            #for i in self.data['sumcurr']:
+            if self.currfile =="":
+                self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No currentfile was selected"
+                self.displaystate.insert(tk.END, self.nothingcurr+'\n')
+            if self.pathshort =="":
+                self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"No Path was selected"
+                self.displaystate.insert(tk.END, self.nothingpath+'\n')
+            if self.currdone =="":
+                self.nothingdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Please read current first"
+                self.displaystate.insert(tk.END, self.nothingdone+'\n')
+                return
+            else:
+                getsum=float(entryCurrsum.get())
+                Currenttrue = [np.logical_and((getsum-float(entryCurrsumplus.get()) <self.data['sumcurr']),(getsum+float(entryCurrsumplus.get()) >self.data['sumcurr']))]
+                #tet=self.data['sumcurr'][Currenttrue]        
+                tet2=np.where(Currenttrue)[1]        
+                #tet3=tet2[20:-10]
+                plotsum = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Lines with selected Current:"+str(tet2)
+                self.displaystate.insert(tk.END, plotsum+'\n')
+                
+                pass
+    
+    def plot_temp_sum(self):
+            """Gibt Zeilen anhand des eingebenen Stroms an"""
+             ######## plot a 3D Current ########
+            #for i in self.data['sumcurr']:
+            if self.currfile =="":
+                self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Currentfile ausgewählt"
+                self.displaystate.insert(tk.END, self.nothingcurr+'\n')
+            if self.pathshort =="":
+                self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Path ausgewählt"
+                self.displaystate.insert(tk.END, self.nothingpath+'\n')
+            if self.currdone =="":
+                self.nothingdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Bitte zuerst Current einlesen"
+                self.displaystate.insert(tk.END, self.nothingdone+'\n')
+                return
+            else:
+                gettemp=float(entryTempsum.get())
+                Temptrue = [np.logical_and((gettemp-float(entryTempsumplus.get()) <self.data['tempmw']),(gettemp+float(entryTempsumplus.get()) >self.data['tempmw']))]
+                #tet=self.data['sumcurr'][Currenttrue]        
+                tet4=np.where(Temptrue)[1]        
+                #tet3=tet2[20:-10]
+                plottemp = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Lines with selected Temperature:"+str(tet4)
+                self.displaystate.insert(tk.END, plottemp+'\n')
+                
+                pass
     
     
     
@@ -463,7 +538,7 @@ class FC_GUI_Fun:
         """Plotet anhand der eingebenen Zeilennummer"""
         ######## plot a 3D Current ########
         if self.currdone =="":
-            self.nothingdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Bitte zuerst Current einlesen"
+            self.nothingdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Please read current first"
             self.displaystate.insert(tk.END, self.nothingdone+'\n')
             return
         else:
@@ -472,8 +547,8 @@ class FC_GUI_Fun:
             canvas.get_tk_widget().pack(side='top', fill='both')
             canvas._tkcanvas.pack(side='top', fill='both', expand=2)
             toolbar = NavigationToolbar2Tk(canvas, page3)
-            canvas.get_tk_widget().grid(row=1,column=1)
-            toolbar.grid(row=50,column=1) 
+            canvas.get_tk_widget().grid(row=0,column=1)
+            toolbar.grid(row=1,column=1) 
               
             
             
@@ -506,7 +581,7 @@ class FC_GUI_Fun:
             ax.set_title('Partial Currents @ '+self.data_str['sumcurr'][getrow]+' A'+'//   @ '+self.data['voltage'][getrow]+' V')
             
             ax.set_zlim(0,maxcurr)
-            ax.set_zlabel('Current in A', linespacing=10.4)
+            ax.set_zlabel('Current in A',labelpad=15)
             ax.view_init(elev=int(entryCurrEval.get()), azim=int(entryCurrAngle.get()))
             
             #plt.show()
@@ -519,39 +594,16 @@ class FC_GUI_Fun:
             plt.gcf().canvas.draw()
             
                   
-            currplot = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current dargestellt"
+            currplot = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Current ploted"
             self.displaystate.insert(tk.END, currplot+'\n')  
             
-    def plot_curr_sum(self):
-            """Gibt Zeilen anhand des eingebenen Stroms an"""
-             ######## plot a 3D Current ########
-            #for i in self.data['sumcurr']:
-            if self.currfile =="":
-                self.nothingcurr=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Currentfile ausgewählt"
-                self.displaystate.insert(tk.END, self.nothingcurr+'\n')
-            if self.pathshort =="":
-                self.nothingpath=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"kein Path ausgewählt"
-                self.displaystate.insert(tk.END, self.nothingpath+'\n')
-            if self.currdone =="":
-                self.nothingdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Bitte zuerst Current einlesen"
-                self.displaystate.insert(tk.END, self.nothingdone+'\n')
-                return
-            else:
-                getsum=int(entryCurrsum.get())
-                Currenttrue = [np.logical_and((getsum-0.5 <self.data['sumcurr']),(getsum+0.5 >self.data['sumcurr']))]
-                #tet=self.data['sumcurr'][Currenttrue]        
-                tet2=np.where(Currenttrue)[1]        
-                tet3=tet2[20:-10]
-                plotsum = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Lines with selected Current:"+str(tet3)
-                self.displaystate.insert(tk.END, plotsum+'\n')
-                
-                pass
+   
         
     def plot_temp(self):
         ######## plot 3D Temperature ########
         
         if self.tempdone =="":
-            self.nothingtdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Bitte zuerst Temperatur einlesen"
+            self.nothingtdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Please read Temperature first"
             self.displaystate.insert(tk.END, self.nothingtdone+'\n')
             return
         else:
@@ -560,8 +612,8 @@ class FC_GUI_Fun:
             canvas.get_tk_widget().pack(side='top', fill='both')
             canvas._tkcanvas.pack(side='top', fill='both', expand=2)
             toolbar = NavigationToolbar2Tk(canvas, page3)
-            canvas.get_tk_widget().grid(row=1,column=2)
-            toolbar.grid(row=50,column=2) 
+            canvas.get_tk_widget().grid(row=0,column=2)
+            toolbar.grid(row=1,column=2) 
             ax2 = fig2.add_subplot(1, 2, 1, projection='3d')
             
             X2 = sp.linspace(0,5,5)
@@ -590,17 +642,83 @@ class FC_GUI_Fun:
             top_scaled2=(top2-sp.amin(top2))/(sp.amax(top2)-sp.amin(top2))
             mycolors = cm.jet(top_scaled2)
             ax2.bar3d(X2, Y2, bottom, width, depth, top2,color=mycolors, alpha=float(entryTrans.get()))
-            ax2.set_title('Temperature'+' @ '+self.data_str['sumcurr'][p]+' A'+'//   @ '+self.data['voltage'][p]+' V')
+            ax2.set_title('Temperatures'+' @ '+self.data_str['sumcurr'][p]+' A'+' //   @ '+self.data['voltage'][p]+' V\n'+'Mean temp:'+self.data_str['tempmw'][p]+'$^\circ$'+'C')
+            
             
             ax2.set_zlim(0,maxi)
-            ax2.set_zlabel('Temperature +'+mintemptxt+'°C')
+            ax2.set_zlabel(u'Temperature +'+mintemptxt+'$^\circ$'+'C',labelpad=15)
+                           
             ax2.view_init(elev=25., azim=60)
             
             plt.gcf().canvas.draw()
             #plt.show()
             
-            tempplot = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature dargestellt"
+            tempplot = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Temperature ploted"
             self.displaystate.insert(tk.END, tempplot+'\n')
+            
+    def plot_power(self):
+        """Plotet anhand der eingebenen Zeilennummer"""
+        ######## plot a 3D Current ########
+        if self.currdone =="":
+            self.nothingdone=ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Please read current first!"
+            self.displaystate.insert(tk.END, self.nothingdone+'\n')
+            return
+        else:
+            fig = plt.figure(figsize=plt.figaspect(0.5))
+            canvas = FigureCanvasTkAgg(fig, master=page3)
+            canvas.get_tk_widget().pack(side='top', fill='both')
+            canvas._tkcanvas.pack(side='top', fill='both', expand=2)
+            toolbar = NavigationToolbar2Tk(canvas, page3)
+            canvas.get_tk_widget().grid(row=2,column=1)
+            toolbar.grid(row=3,column=1) 
+              
+            
+            
+            ax = fig.add_subplot(1, 2, 1, projection='3d')
+            
+            X = sp.linspace(0,10,10)
+            Y = sp.linspace(0,10,10)
+            
+            X, Y = sp.meshgrid(X, Y)
+            X, Y = X.ravel(), Y.ravel()
+            
+            #R = sp.sqrt(X**2 + Y**2)
+            #Z = sp.sin(R)
+            
+                  
+            
+            width = depth = 1
+            bottom=X*0.
+            
+            
+            #plt.ion()
+            getrow=int(entryrowplot.get())
+            power_floats=self.data['power'][getrow].reshape(10,10)
+            maxpower= np.max(power_floats)
+            #print sp.mean(current_floats)
+            top=power_floats.ravel()
+            top_scaled=(top-sp.amin(top))/(sp.amax(top)-sp.amin(top))
+            mycolors = cm.jet(top_scaled)
+            ax.bar3d(X, Y, bottom, width, depth, top,color=mycolors, alpha=float(entryTrans.get()))
+            ax.set_title('Partial Power @'+self.data_str['sumcurr'][getrow]+' A'+'//   @ '+self.data['voltage'][getrow]+' V' )
+            #'+self.data_str['sumcurr'][getrow]+' A'+'//   @ '+self.data['voltage'][getrow]+' V')
+            
+            ax.set_zlim(0,maxpower)
+            ax.set_zlabel('Power in W',labelpad=15)
+            ax.view_init(elev=int(entryCurrEval.get()), azim=int(entryCurrAngle.get()))
+            
+            #plt.show()
+            fig = plt.figure()
+    
+           
+            
+            #plt.clf()
+            #plt.show()
+            plt.gcf().canvas.draw()
+            
+                  
+            powerplot = ts.strftime("%Y.%m.%d. %H:%M:%S :")+"Power plotted"
+            self.displaystate.insert(tk.END, powerplot+'\n')
     
     def clear_msg(self):
         self.displaystate.delete('1.0', tk.END)
@@ -654,9 +772,9 @@ labelVoltStart=tk.Label(page2, text=" 1st line of voltage data in *.dat: (5)", w
 labelVoltStart.grid(column=0, row=8)
 labelrowplot=tk.Label(page2, text=" Which line do you want to plot? (0-xxxxxxx)", width=labelsize1,anchor=textalign)
 labelrowplot.grid(column=0, row=9)
-labelEvalCurr=tk.Label(page2, text="Elevation of plot view: (25)", width=labelsize1,anchor=textalign )
+labelEvalCurr=tk.Label(page2, text="Elevation of plot view: (curr) (25)", width=labelsize1,anchor=textalign )
 labelEvalCurr.grid(column=0, row=10)
-labelAngleCurr=tk.Label(page2, text="Angle of plot view: (60)", width=labelsize1,anchor=textalign )
+labelAngleCurr=tk.Label(page2, text="Angle of plot view (curr): (60)", width=labelsize1,anchor=textalign )
 labelAngleCurr.grid(column=0, row=11)
 labelTrans=tk.Label(page2, text="Transparency of Plot 1...0.5...0", width=labelsize1,anchor=textalign )
 labelTrans.grid(column=0, row=12)
@@ -672,18 +790,22 @@ labelEvalTemp=tk.Label(page2, text="Elevation of plot view(Temp): (25)", width=l
 labelEvalTemp.grid(column=2, row=10)
 labelAngleTemp=tk.Label(page2, text="Angle of plot view(Temp): (60)", width=labelsize1,anchor=textalign )
 labelAngleTemp.grid(column=2, row=11)
-labelCurrSum=tk.Label(page2, text="Measured Current ", width=labelsize1,anchor=textalign )
-labelCurrSum.grid(column=2, row=12)
+labelCurrSum=tk.Label(page2, text="Measured Current                                            +/- ", width=labelsize1,anchor=textalign )
+labelCurrSum.grid(column=2, row=14)
+labelTempSum=tk.Label(page2, text="Measured Temp                                            +/- ", width=labelsize1,anchor=textalign )
+labelTempSum.grid(column=2, row=15)
 labelMessage=tk.Label(page2, text="Meassage ", width=labelsize1,anchor=textalign )
 labelMessage.grid(column=1, row=16)
+
 
 """####----- Buttons -----#####"""
 bwidth1=10
 bwidth2=18
-button_currD = tk.Button(page2, text="Load Current", command=FC_GUI_Fun.importURL_Curr)
+bwidth3=24
+button_currD = tk.Button(page2, text="Select Current", command=FC_GUI_Fun.importURL_Curr)
 button_currD.grid(sticky=stick2, column=2, row=0)
 button_currD.config(width = bwidth1)
-button_tempD = tk.Button(page2, text="Load Temp", command=FC_GUI_Fun.importURL_Temp)
+button_tempD = tk.Button(page2, text="Select Temp", command=FC_GUI_Fun.importURL_Temp)
 button_tempD.grid(sticky=stick2,column=2, row=1)
 button_tempD.config(width = bwidth1)
 button_path = tk.Button(page2, text="Storage path", command=FC_GUI_Fun.savepath)
@@ -701,12 +823,18 @@ button_plcurr.config(width = bwidth2)
 button_pltemp = tk.Button(page2, text="Plot Temperature", command=FC_GUI_Fun.plot_temp)
 button_pltemp.grid(sticky=stick2, column=2, row=13)
 button_pltemp.config(width = bwidth2)
-button_plcurr = tk.Button(page2, text="Show Current_Lines", command=FC_GUI_Fun.plot_curr_sum)
-button_plcurr.grid(sticky=stick, column=1, row=13)
-button_plcurr.config(width = bwidth2)
+button_pltemp = tk.Button(page2, text="Plot Power", command=FC_GUI_Fun.plot_power)
+button_pltemp.grid(sticky=stick2, column=3, row=13)
+button_pltemp.config(width = bwidth2)
 button_plcurr = tk.Button(page2, text="Clear Message", command=FC_GUI_Fun.clear_msg)
 button_plcurr.grid(sticky=stick2, column=1, row=13)
 button_plcurr.config(width = bwidth2)
+button_plcurr = tk.Button(page2, text="Show Lines for Ampere", command=FC_GUI_Fun.plot_curr_sum)
+button_plcurr.grid(sticky=stick, column=1, row=14)
+button_plcurr.config(width = bwidth3)
+button_pltemp = tk.Button(page2, text="Show Lines for Temp", command=FC_GUI_Fun.plot_temp_sum)
+button_pltemp.grid(sticky=stick, column=1, row=15)
+button_pltemp.config(width = bwidth3)
 
 """###-----text------#####"""
 FC_GUI_Fun.displaycurrent=tk.Text(master=page2, height = 1, width = labelsize9 )
@@ -744,6 +872,8 @@ var17 = tk.StringVar(root, value="4")
 var18 = tk.StringVar(root, value="8")
 var19 = tk.StringVar(root, value="13")
 var20 = tk.StringVar(root, value="8")
+var21 = tk.StringVar(root, value="0.2")
+var22 = tk.StringVar(root, value="0.2")
 
 
 """Position der Entryies"""
@@ -785,10 +915,18 @@ entryTempEval=tk.Entry(page2,width=labelsize2, textvariable=var11)
 entryTempEval.grid(sticky=stick2,column=1, row=10)
 entryTempAngle=tk.Entry(page2,width=labelsize2, textvariable=var12)
 entryTempAngle.grid(sticky=stick2,column=1, row=11)
-entryCurrsum=tk.Entry(page2,width=labelsize2,)
-entryCurrsum.grid(sticky=stick2,column=1, row=12)
+
 entryTrans=tk.Entry(page2,width=labelsize2,textvariable=var13)
 entryTrans.grid(sticky=stick,column=1, row=12)
+
+entryCurrsum=tk.Entry(page2,width=labelsize2,)
+entryCurrsum.grid(sticky=stick2,column=1, row=14)
+entryCurrsumplus=tk.Entry(page2,width=labelsize2,textvariable=var21)
+entryCurrsumplus.grid(sticky=stick2,column=2, row=14)
+entryTempsum=tk.Entry(page2,width=labelsize2,)
+entryTempsum.grid(sticky=stick2,column=1, row=15)
+entryTempsumplus=tk.Entry(page2,width=labelsize2,textvariable=var22)
+entryTempsumplus.grid(sticky=stick2,column=2, row=15)
 
 """### Menuebar ###"""
 menubar = tk.Menu(root)
